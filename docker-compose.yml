@@ -1,0 +1,26 @@
+version: '2'
+services:
+  zookeeper:
+    image: "wurstmeister/zookeeper"
+    ports:
+      - "2181:2181"
+
+  kafka:
+    image: "wurstmeister/kafka"
+    environment:
+      KAFKA_ADVERTISED_HOST_NAME: "kafka"
+      KAFKA_ADVERTISED_PORT: "9092"
+      KAFKA_ZOOKEEPER_CONNECT: "zookeeper:2181"
+      KAFKA_CREATE_TOPICS: "generated_calls:1:1,processed_calls:1:1"
+    volumes:
+      - /private/var/run/docker.sock:/var/run/docker.sock
+
+  calls_generator:
+    image: "kristiyan-calls-generator:latest"
+    environment:
+      KAFKA_HOST: "kafka"
+      KAFKA_PORT: "9092"
+      GENERATOR_TOPIC: "generated_calls"
+    volumes:
+      - ./calls_generator:/usr/app/src
+    command: python /usr/app/src/generator.py
