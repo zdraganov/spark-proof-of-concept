@@ -1,4 +1,4 @@
-version: '2'
+version: '3'
 services:
   zookeeper:
     image: "wurstmeister/zookeeper"
@@ -11,16 +11,44 @@ services:
       KAFKA_ADVERTISED_HOST_NAME: "kafka"
       KAFKA_ADVERTISED_PORT: "9092"
       KAFKA_ZOOKEEPER_CONNECT: "zookeeper:2181"
-      KAFKA_CREATE_TOPICS: "generated_calls:1:1,processed_calls:1:1"
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
+      KAFKA_CREATE_TOPICS: "raw_data:1:1,aggregated_data:1:1"
     volumes:
       - /private/var/run/docker.sock:/var/run/docker.sock
+    ports:
+      - "9092:9092"
+    links:
+      - zookeeper
+    depends_on:
+      - zookeeper
 
-  calls_generator:
-    image: "kristiyan-calls-generator:latest"
+  producer:
+    image : "producer_test:latest"
     environment:
       KAFKA_HOST: "kafka"
       KAFKA_PORT: "9092"
-      GENERATOR_TOPIC: "generated_calls"
+      RAW_DATA_TOPIC: "raw_data"
     volumes:
-      - ./calls_generator:/usr/app/src
-    command: python /usr/app/src/generator.py
+      - ./producer/producer.py:/usr/app/src/producer.py
+    command: python -u /usr/app/src/producer.py
+    links:
+      - kafka
+      - zookeeper
+    depends_on:
+      - kafka
+
+  consumer:
+    image: "consumer_test:latest"
+    environment:
+      KAFKA_HOST: "kafka"
+      KAFKA_PORT: "9092"
+      RAW_DATA_TOPIC: "raw_data"
+      AGGREGATED_DATA_TOPIC: "aggregated_data"
+    volumes:
+      - ./consumer/consumer.py:/usr/app/src/consumer.py
+    command: python -u /usr/app/src/consumer.py
+    links:
+      - kafka
+      - zookeeper
+    depends_on:
+      - kafka

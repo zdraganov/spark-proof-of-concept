@@ -7,16 +7,17 @@ from kafka import KafkaProducer
 kafka_host = os.environ['KAFKA_HOST']
 kafka_port = os.environ['KAFKA_PORT']
 
-generator_topic = os.environ['GENERATOR_TOPIC']
+raw_data_topic = os.environ['RAW_DATA_TOPIC']
 
 def main():
-    print("Start")
-    time.sleep(5)
+    time.sleep(20)
+    print("Producer started")
+
     producer = KafkaProducer(bootstrap_servers=f"{kafka_host}:{kafka_port}",
                              value_serializer=lambda v: json.dumps(v).encode('utf-8'))
 
     while True:
-        producer.send(generator_topic, {'foo': 'bar'})
+        producer.send(raw_data_topic, {'bar': 'foo'})
 
         print("Message generated")
         time.sleep(1)
