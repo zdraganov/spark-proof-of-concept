@@ -18,7 +18,7 @@ def main():
 	ssc = StreamingContext(sc,10)
 
 	# create kafka direct stream from spark streaming context and generated messeges from producer
-	kafka_stream = KafkaUtils.createStream(ssc, "localhost:2181", "metadata.broker.list": {raw_data_topic:1})
+	kafka_stream = KafkaUtils.createStream(ssc, "localhost:2181", "metadata.broker.list", {raw_data_topic:1})
 
 	parsed = kafka_stream.map(lambda v: json.loads(v[1]))
 
