@@ -1,6 +1,12 @@
 #!/bin/bash 
 
-cd spark-datastore
+cd /producer
+docker build -t producer_test:latest .
+
+cd ../consumer
+docker build -t consumer_test:latest .
+
+cd ../spark-datastore
 docker build -t datastore:latest .
 
 cd ../spark-master
@@ -11,3 +17,4 @@ docker build -t spark-slave:latest .
 
 cd ../spark-submit
 docker build -t spark-submit:latest .
+
