@@ -1,6 +1,6 @@
 #!/bin/bash 
 
-cd /producer
+cd producer
 docker build -t producer_test:latest .
 
 cd ../consumer

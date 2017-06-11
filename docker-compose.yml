@@ -43,31 +43,31 @@ services:
       depends_on:
         - kafka
 
-  consumer:
-      container_name: "kafka_consumer"
-      image: "consumer_test:latest"
-      environment:
-        KAFKA_HOST: "kafka"
-        KAFKA_PORT: "9092"
-        RAW_DATA_TOPIC: "raw_data"
-        AGGREGATED_DATA_TOPIC: "aggregated_data"
-        KAFKA_GROUP: "consumer_group"
-      volumes:
-        - ./consumer/consumer.py:/usr/app/src/consumer.py
-      command: python -u /usr/app/src/consumer.py
-      links:
-        - kafka
-        - zookeeper
-      depends_on:
-        - kafka
+  # consumer:
+  #     container_name: "kafka_consumer"
+  #     image: "consumer_test:latest"
+  #     environment:
+  #       KAFKA_HOST: "kafka"
+  #       KAFKA_PORT: "9092"
+  #       RAW_DATA_TOPIC: "raw_data"
+  #       AGGREGATED_DATA_TOPIC: "aggregated_data"
+  #       KAFKA_GROUP: "consumer_group"
+  #     volumes:
+  #       - ./consumer/consumer.py:/usr/app/src/consumer.py
+  #     command: python -u /usr/app/src/consumer.py
+  #     links:
+  #       - kafka
+  #       - zookeeper
+  #     depends_on:
+  #       - kafka
 
-  mongodb:
-      container_name : mongodb
-      image : "mongodb"
-      ports:
-        - "27017:27017"
-      links:
-        - kafka
+  # mongodb:
+  #     container_name : mongodb
+  #     image : "mongodb"
+  #     ports:
+  #       - "27017:27017"
+  #     links:
+  #       - kafka
   
   spark-datastore:
       container_name: "spark-datastore"
@@ -82,6 +82,8 @@ services:
       ports:
         - "8080:8080"
         - "7077:7077"
+      links:
+        - kafka
   slave:
       container_name: "slave"
       image: "spark-slave:latest"
@@ -93,18 +95,6 @@ services:
         - master:master
       depends_on:
         - master
-
-  # consumer_spark:
-  #     image: "spark_word_count"
-  #     environment:
-  #       CONSUMER_SPARK_ZOOKEEPER_CONNECT: "zookeeper:2181"
-  #       RAW_DATA_TOPIC: "raw_data"
-  #       KAFKA_CONSUMER_GROUP: "consumer_group"
-  #       SPARK_MASTER: "spark://spark-master:7077"
-  #     ports:
-  #       - "4569:4569"
-  #     links:
-  #       - consumer
 
   # spark-master:
   #   image: bde2020/spark-master:2.1.1-hadoop2.7
@@ -128,15 +118,7 @@ services:
   #   environment:
   #     - "SPARK_MASTER=spark://spark-master:7077"
   #     - "constraint:node==<yourmasternode>"
-    
-  # spark:
-  #   image: "spark_test:latest"
-  #   links:
-  #     - spark-master
-  #     - kafka
-  #   volumes:
-  #     - ./spark/spark-consumer.py:/usr/app/src/spark-consumer.py
-  #   command: python -u /usr/app/src/spark-consumer.py
+
 
 
     

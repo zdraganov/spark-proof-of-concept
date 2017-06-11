@@ -7,7 +7,7 @@ import pyspark
 from pyspark.streaming import StreamingContext
 from pyspark.streaming.kafka import KafkaUtils
 import json
-from kafka import KafkaClient
+
 
 
 def main():
@@ -19,10 +19,16 @@ def main():
 	ssc = StreamingContext(sc,10)
 
 	# create kafka direct stream from spark streaming context and generated messeges from producer
-	kafka_stream = KafkaUtils.createStream(ssc, "localhost:2181", "metadata.broker.list", {'raw_data':1})
+	kafka_stream = KafkaUtils.createStream(ssc, "zookeeper:2181", "spark-streaming-consumer", {'raw_data':1})
 
-	parsed = kafka_stream.map(lambda v: json.loads(v[1]))
-	print(parsed.count())
+	# parsed = kafka_stream.map(lambda v: json.loads(v[1]))
+	lines = kafka_stream.map(lambda x: x[1])
+	counts = lines.flatMap(lambda line: line.split(" ")) \
+		.map(lambda word: (word,1)) \
+		.reduceByKey(lambda a, b: a+b)
+
+	counts.pprint()
+	# print(parsed.count())
 
 	ssc.start()
 	ssc.awaitTermination()
