@@ -7,7 +7,14 @@ import pyspark
 from pyspark.streaming import StreamingContext
 from pyspark.streaming.kafka import KafkaUtils
 import json
+from kafka import KafkaProducer
 
+# producer = KafkaProducer(bootstrap_servers='localhost:9092',value_serializer=lambda v: json.dumps(v).encode('utf-8'))
+
+# def handler(message):
+# 	records = message.collect()
+#     for record in records:
+#         producer.send('spark.out', str(record))
 
 
 def main():
@@ -18,19 +25,21 @@ def main():
 	# create spark streaming context from spark context(sc) , second parameter is for batch duration
 	ssc = StreamingContext(sc,10)
 
+	# kvs = KafkaUtils.createDirectStream(ssc,['test_topic'] , {"metadata.broker.list":"localhost:9092"})
 	# create kafka direct stream from spark streaming context and generated messeges from producer
 	kafka_stream = KafkaUtils.createStream(ssc, "zookeeper:2181", "spark-streaming-consumer", {'raw_data':1})
 
-	# parsed = kafka_stream.map(lambda v: json.loads(v[1]))
-	lines = kafka_stream.map(lambda x: x[1])
-	counts = lines.flatMap(lambda line: line.split(" ")) \
-		.map(lambda word: (word,1)) \
-		.reduceByKey(lambda a, b: a+b)
+	parsed = kafka_stream.map(lambda v: json.loads(v[1]))
+	lines = parsed.filter(lambda x: str(x['revenue_counted']) == 'True') \
+		.map(lambda x: int(x['revenue'])) \
+		.reduce(lambda x,y: x + y)
+	
 
-	counts.pprint()
-	# print(parsed.count())
+	lines.pprint()
 
 	ssc.start()
 	ssc.awaitTermination()
+
+
 
 main()

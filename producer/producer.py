@@ -1,4 +1,3 @@
-import random
 import os
 import time
 import json
@@ -17,8 +16,10 @@ def main():
     producer = KafkaProducer(bootstrap_servers=f"{kafka_host}:{kafka_port}",
                              value_serializer=lambda v: json.dumps(v).encode('utf-8'))
 
+    
+
     while True:
-        producer.send(raw_data_topic, {"foo":"bar"})
+        producer.send(raw_data_topic, {'id':'{}'.format(random.randint(1 ,10000)) , 'revenue':'{}'.format(random.randint(1,10000)), 'revenue_counted':'{}'.format(random.choice([True, False]))})
 
         print("Message generated")
         time.sleep(1)
