@@ -49,7 +49,7 @@ services:
       environment:
         KAFKA_HOST: "kafka"
         KAFKA_PORT: "9092"
-        RAW_DATA_TOPIC: "raw_data"
+        RAW_DATA_TOPIC: "aggregated_data"
         AGGREGATED_DATA_TOPIC: "aggregated_data"
         KAFKA_GROUP: "consumer_group"
       volumes:

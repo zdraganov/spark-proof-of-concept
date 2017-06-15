@@ -9,12 +9,15 @@ from pyspark.streaming.kafka import KafkaUtils
 import json
 from kafka import KafkaProducer
 
-# producer = KafkaProducer(bootstrap_servers='localhost:9092',value_serializer=lambda v: json.dumps(v).encode('utf-8'))
+producer = KafkaProducer(bootstrap_servers='kafka:9092',value_serializer=lambda v: json.dumps(v).encode('utf-8'))
 
-# def handler(message):
-# 	records = message.collect()
-#     for record in records:
-#         producer.send('spark.out', str(record))
+def handler(message):
+    records = message.collect()
+    for record in records:
+        producer.send('aggregated_data', str(record))
+
+    print("New message generated !")
+
 
 
 def main():
@@ -34,8 +37,13 @@ def main():
 		.map(lambda x: int(x['revenue'])) \
 		.reduce(lambda x,y: x + y)
 	
+	lines.foreachRDD(handler)
+
+	true_orders = parsed.filter(lambda x: str(x['revenue_counted']) == 'True') \
+		.count()
 
 	lines.pprint()
+	true_orders.pprint()
 
 	ssc.start()
 	ssc.awaitTermination()
