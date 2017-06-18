@@ -6,7 +6,7 @@ import sys
 import pyspark
 from pyspark.streaming import StreamingContext
 from pyspark.streaming.kafka import KafkaUtils
-import json
+import json	
 from kafka import KafkaProducer
 
 producer = KafkaProducer(bootstrap_servers='kafka:9092',value_serializer=lambda v: json.dumps(v).encode('utf-8'))
@@ -28,9 +28,11 @@ def main():
 	# create spark streaming context from spark context(sc) , second parameter is for batch duration
 	ssc = StreamingContext(sc,10)
 
-	# kvs = KafkaUtils.createDirectStream(ssc,['test_topic'] , {"metadata.broker.list":"localhost:9092"})
+	# kvs = KafkaUtils.createDirectStream(ssc,['raw_data'] , {"metadata.broker.list":"kafka:9092"})
 	# create kafka direct stream from spark streaming context and generated messeges from producer
 	kafka_stream = KafkaUtils.createStream(ssc, "zookeeper:2181", "spark-streaming-consumer", {'raw_data':1})
+
+	# kafka_stream.saveAsTextFiles('/data/out.txt')
 
 	parsed = kafka_stream.map(lambda v: json.loads(v[1]))
 	lines = parsed.filter(lambda x: str(x['revenue_counted']) == 'True') \
@@ -41,6 +43,12 @@ def main():
 
 	true_orders = parsed.filter(lambda x: str(x['revenue_counted']) == 'True') \
 		.count()
+
+	true_status = parsed.filter(lambda x: str(x['revenue_counted']) == 'True').repartition(1).saveAsTextFiles('/data/out.txt')
+
+	false_status = parsed.filter(lambda x: str(x['revenue_counter']) == 'False').repartition(1).saveAsTextFiles('/data/false_out.txt')
+
+	# true_status.pprint()
 
 	lines.pprint()
 	true_orders.pprint()

@@ -18,7 +18,7 @@ def main():
 
     while True:
         for message in consumer:
-            print("Total revenue of orders with revenue_counted = True -> " , message.value)
+            print("Total revenue of orders with revenue_counted = True -> " , message.value.decode('utf-8'))
 
         time.sleep(1)
 

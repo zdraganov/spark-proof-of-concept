@@ -34,3 +34,8 @@ docker run --rm -it --link master:master --volumes-from spark-datastore spark-su
 Or the script spark_submit.sh can be used while passing a spark code .py file as argument
 
 * check the addres of spark master , last number can be different from 2 -> check on localhost:8080 where spark master runs
+
+*** sparkContextExample 
+There are two ways of creating spark stream with kafka
+	- using KafkaUtils.createStream which takes data from the moment that producer started work.For example if the prodecer started work at 10:00am and the spark app is submited at 02:00pm 'createStream' will take all the data from 10:00 to 02:00pm and will keep working in real time until is stopped.
+	- using KafkaUtils.createDirectStream whiche take data from the moment that the spark app is submited.

@@ -15,11 +15,9 @@ def main():
 
     producer = KafkaProducer(bootstrap_servers=f"{kafka_host}:{kafka_port}",
                              value_serializer=lambda v: json.dumps(v).encode('utf-8'))
-
     
-
     while True:
-        producer.send(raw_data_topic, {'id':'{}'.format(random.randint(1 ,10000)) , 'revenue':'{}'.format(random.randint(1,10000)), 'revenue_counted':'{}'.format(random.choice([True, False]))})
+        producer.send(raw_data_topic, {'id':'{}'.format(random.randint(1 ,10000)) , 'revenue':'{}'.format(random.randint(1,10000)), 'revenue_counted':'{}'.format(random.choice([True, False])), 'timestamp':time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(int("1340578800000") / 1000))})
 
         print("Message generated")
         time.sleep(1)
