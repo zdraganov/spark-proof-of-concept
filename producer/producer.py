@@ -1,8 +1,10 @@
 import os
 import time
+import datetime
 import json
 import random
 from kafka import KafkaProducer
+from time import gmtime,strftime
 
 kafka_host = os.environ['KAFKA_HOST']
 kafka_port = os.environ['KAFKA_PORT']
@@ -17,7 +19,7 @@ def main():
                              value_serializer=lambda v: json.dumps(v).encode('utf-8'))
     
     while True:
-        producer.send(raw_data_topic, {'id':'{}'.format(random.randint(1 ,10000)) , 'revenue':'{}'.format(random.randint(1,10000)), 'revenue_counted':'{}'.format(random.choice([True, False])), 'timestamp':time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(int("1340578800000") / 1000))})
+        producer.send(raw_data_topic, {'id':'{}'.format(random.randint(1 ,10000)) , 'revenue':'{}'.format(random.randint(1,10000)), 'revenue_counted':'{}'.format(random.choice([True, False])), 'timestamp':datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")})
 
         print("Message generated")
         time.sleep(1)

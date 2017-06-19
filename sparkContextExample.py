@@ -18,43 +18,53 @@ def handler(message):
 
     print("New message generated !")
 
-
-
 def main():
 
 	#create spark context
 	sc = SparkContext(appName="SparkStreamingWithKafka")
 
 	# create spark streaming context from spark context(sc) , second parameter is for batch duration
-	ssc = StreamingContext(sc,10)
+	ssc = StreamingContext(sc,5)
 
-	# kvs = KafkaUtils.createDirectStream(ssc,['raw_data'] , {"metadata.broker.list":"kafka:9092"})
+	kvs = KafkaUtils.createDirectStream(ssc,['raw_data'] , {"metadata.broker.list":"kafka:9092"})
 	# create kafka direct stream from spark streaming context and generated messeges from producer
-	kafka_stream = KafkaUtils.createStream(ssc, "zookeeper:2181", "spark-streaming-consumer", {'raw_data':1})
+	# kafka_stream = KafkaUtils.createStream(ssc, "zookeeper:2181", "spark-streaming-consumer", {'raw_data':1})
 
 	# kafka_stream.saveAsTextFiles('/data/out.txt')
 
-	parsed = kafka_stream.map(lambda v: json.loads(v[1]))
-	lines = parsed.filter(lambda x: str(x['revenue_counted']) == 'True') \
-		.map(lambda x: int(x['revenue'])) \
-		.reduce(lambda x,y: x + y)
+	parsed = kvs.map(lambda v: json.loads(v[1]))
 	
-	lines.foreachRDD(handler)
-
+	#counting orders with revenue_counter = True	
 	true_orders = parsed.filter(lambda x: str(x['revenue_counted']) == 'True') \
 		.count()
 
-	true_status = parsed.filter(lambda x: str(x['revenue_counted']) == 'True').repartition(1).saveAsTextFiles('/data/out.txt')
+	#send message to consumer with orders where revenue_counted = True
+	true_status = parsed.filter(lambda x: str(x['revenue_counted']) == 'True') \
+		.foreachRDD(handler)
+	
+	#calculate total revenue of orders with revenue_counter = True and send it throw consumer
+	true_status = parsed.filter(lambda x: str(x['revenue_counted']) == 'True') \
+		.map(lambda x: int(x['revenue'])) \
+		.reduce(lambda x,y: x + y) \
+		.foreachRDD(handler)
 
-	false_status = parsed.filter(lambda x: str(x['revenue_counter']) == 'False').repartition(1).saveAsTextFiles('/data/false_out.txt')
+	
+	false_status = parsed.filter(lambda x: str(x['revenue_counted']) == 'False') \
+		.count()
 
-	# true_status.pprint()
+	false_status = parsed.filter(lambda x: str(x['revenue_counted']) == 'False') \
+		.foreachRDD(handler)
 
-	lines.pprint()
-	true_orders.pprint()
+	false_stats = parsed.filter(lambda x: str(x['revenue_counted']) == 'False') \
+		.map(lambda x: int(x['revenue'])) \
+		.reduce(lambda x,y: x + y) \
+		.foreachRDD(handler)
+
+	# false_status = parsed.filter(lambda x: str(x['revenue_counter']) == 'False').repartition(1).saveAsTextFiles('/data/false_out.txt')
 
 	ssc.start()
 	ssc.awaitTermination()
+	# ssc.stop()
 
 
 

@@ -10,7 +10,7 @@ kafka_port = os.environ['KAFKA_PORT']
 raw_data_topic = os.environ['RAW_DATA_TOPIC']
 
 def main():
-    time.sleep(180)
+    time.sleep(60)
     print("Consumer started!")
 
     consumer = KafkaConsumer(bootstrap_servers=f"{kafka_host}:{kafka_port}")

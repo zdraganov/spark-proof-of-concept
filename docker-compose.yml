@@ -51,7 +51,6 @@ services:
         KAFKA_PORT: "9092"
         RAW_DATA_TOPIC: "aggregated_data"
         AGGREGATED_DATA_TOPIC: "aggregated_data"
-        KAFKA_GROUP: "consumer_group"
       volumes:
         - ./consumer/consumer.py:/usr/app/src/consumer.py
       command: python -u /usr/app/src/consumer.py
