@@ -27,6 +27,14 @@ services:
       depends_on:
         - zookeeper
 
+  redis:
+      container_name: "redis"
+      image: 'redis:3.0-alpine'
+      volumes:
+        - '/var/lib/redis/data'
+      ports:
+        - '6379:6379'
+
   producer:
       container_name: "kafka_producer"
       image : "producer_test:latest"
@@ -84,7 +92,7 @@ services:
       links:
         - kafka
   slave:
-      # container_name: "slave"
+      container_name: "slave"
       image: "spark-slave:latest"
       # ports:
       #   - "8081:8081"
