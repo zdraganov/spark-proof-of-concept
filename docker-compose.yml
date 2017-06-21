@@ -30,8 +30,10 @@ services:
   redis:
       container_name: "redis"
       image: 'redis:3.0-alpine'
+      environment:
+        REDIS_ADVERTISED_HOST_NAME: "redis"
       volumes:
-        - '/var/lib/redis/data'
+        - /redis_data
       ports:
         - '6379:6379'
 

@@ -6,10 +6,14 @@ import sys
 import pyspark
 from pyspark.streaming import StreamingContext
 from pyspark.streaming.kafka import KafkaUtils
-import json	
+import json
+import redis
 from kafka import KafkaProducer
 
+
 producer = KafkaProducer(bootstrap_servers='kafka:9092',value_serializer=lambda v: json.dumps(v).encode('utf-8'))
+
+redisClient = redis.StrictRedis(host='redis' , port=6379)
 
 def handler(message):
     records = message.collect()
@@ -17,6 +21,13 @@ def handler(message):
         producer.send('aggregated_data', str(record))
 
     print("New message generated !")
+
+def toRedis(message):
+	redisQueue = message.collect()
+	for record in redisQueue:
+		redisClient.set('key1' , record)
+
+	print("Record set in redis base")
 
 def main():
 
@@ -32,33 +43,36 @@ def main():
 
 	# kafka_stream.saveAsTextFiles('/data/out.txt')
 
+	#decode data into python dict
 	parsed = kvs.map(lambda v: json.loads(v[1]))
+	parsed.foreachRDD(toRedis)
+	# parsed.pprint()
 	
 	#counting orders with revenue_counter = True	
-	true_orders = parsed.filter(lambda x: str(x['revenue_counted']) == 'True') \
-		.count()
+	# true_orders = parsed.filter(lambda x: str(x['revenue_counted']) == 'True') \
+	# 	.count()
 
-	#send message to consumer with orders where revenue_counted = True
-	true_status = parsed.filter(lambda x: str(x['revenue_counted']) == 'True') \
-		.foreachRDD(handler)
+	# #send message to consumer with orders where revenue_counted = True
+	# true_status = parsed.filter(lambda x: str(x['revenue_counted']) == 'True') \
+	# 	.foreachRDD(handler)
 	
-	#calculate total revenue of orders with revenue_counter = True and send it throw consumer
-	true_status = parsed.filter(lambda x: str(x['revenue_counted']) == 'True') \
-		.map(lambda x: int(x['revenue'])) \
-		.reduce(lambda x,y: x + y) \
-		.foreachRDD(handler)
+	# #calculate total revenue of orders with revenue_counter = True and send it throw consumer
+	# true_status = parsed.filter(lambda x: str(x['revenue_counted']) == 'True') \
+	# 	.map(lambda x: int(x['revenue'])) \
+	# 	.reduce(lambda x,y: x + y) \
+	# 	.foreachRDD(handler)
 
 	
-	false_status = parsed.filter(lambda x: str(x['revenue_counted']) == 'False') \
-		.count()
+	# false_status = parsed.filter(lambda x: str(x['revenue_counted']) == 'False') \
+	# 	.count()
 
-	false_status = parsed.filter(lambda x: str(x['revenue_counted']) == 'False') \
-		.foreachRDD(handler)
+	# false_status = parsed.filter(lambda x: str(x['revenue_counted']) == 'False') \
+	# 	.foreachRDD(handler)
 
-	false_stats = parsed.filter(lambda x: str(x['revenue_counted']) == 'False') \
-		.map(lambda x: int(x['revenue'])) \
-		.reduce(lambda x,y: x + y) \
-		.foreachRDD(handler)
+	# false_stats = parsed.filter(lambda x: str(x['revenue_counted']) == 'False') \
+	# 	.map(lambda x: int(x['revenue'])) \
+	# 	.reduce(lambda x,y: x + y) \
+	# 	.foreachRDD(handler)
 
 	# false_status = parsed.filter(lambda x: str(x['revenue_counter']) == 'False').repartition(1).saveAsTextFiles('/data/false_out.txt')
 
