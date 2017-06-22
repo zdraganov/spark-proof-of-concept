@@ -17,15 +17,18 @@ redisClient = redis.StrictRedis(host='redis' , port=6379)
 
 def handler(message):
     records = message.collect()
+    # messeges = json.dumps(records)
     for record in records:
-        producer.send('aggregated_data', str(record))
+    	id = record['id']
+        producer.send('aggregated_data', id)
 
     print("New message generated !")
 
 def toRedis(message):
 	redisQueue = message.collect()
 	for record in redisQueue:
-		redisClient.set('key1' , record)
+		id = str(record['id'])
+		redisClient.set('key1:{}'.format(id), str(record))
 
 	print("Record set in redis base")
 
@@ -45,7 +48,7 @@ def main():
 
 	#decode data into python dict
 	parsed = kvs.map(lambda v: json.loads(v[1]))
-	parsed.foreachRDD(toRedis)
+	parsed.foreachRDD(handler)
 	# parsed.pprint()
 	
 	#counting orders with revenue_counter = True	
