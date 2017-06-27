@@ -5,4 +5,6 @@ RUN apt-get update
 
 VOLUME ["/data"]
 
-ENTRYPOINT /bin/true
+COPY spark_context_example.py /data
+
+CMD /bin/true

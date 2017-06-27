@@ -1,49 +1,49 @@
 version: '2'
 services:
   zookeeper:
-      container_name: "zookeeper"
-      image: "wurstmeister/zookeeper"
+      container_name: 'zookeeper'
+      image: 'wurstmeister/zookeeper'
       environment:
-        ZOOKEPER_ADVERTISED_HOST_NAME: "zookeeper"
-        ZOOKEPER_ADVERTISED_PORT: "2181"
+        ZOOKEPER_ADVERTISED_HOST_NAME: 'zookeeper'
+        ZOOKEPER_ADVERTISED_PORT: '2181'
       ports:
-        - "2181:2181"
+        - '2181:2181'
 
   kafka:
-      container_name: "kafka"
-      image: "wurstmeister/kafka"
+      container_name: 'kafka'
+      image: 'wurstmeister/kafka'
       environment:
-        KAFKA_ADVERTISED_HOST_NAME: "kafka"
-        KAFKA_ADVERTISED_PORT: "9092"
-        KAFKA_ZOOKEEPER_CONNECT: "zookeeper:2181"
+        KAFKA_ADVERTISED_HOST_NAME: 'kafka'
+        KAFKA_ADVERTISED_PORT: '9092'
+        KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
         KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
-        KAFKA_CREATE_TOPICS: "raw_data:1:1,aggregated_data:1:1"
+        KAFKA_CREATE_TOPICS: 'raw_data:1:1,aggregated_data:1:1'
       volumes:
         - /private/var/run/docker.sock:/var/run/docker.sock
       ports:
-        - "9092:9092"
+        - '9092:9092'
       links:
         - zookeeper
       depends_on:
         - zookeeper
 
   redis:
-      container_name: "redisbase"
+      container_name: 'redisbase'
       image: 'redis:3.0-alpine'
       environment:
-        REDIS_ADVERTISED_HOST_NAME: "redis"
+        REDIS_ADVERTISED_HOST_NAME: 'redis'
       volumes:
         - /redis_data
       ports:
         - '6379:6379'
 
   producer:
-      container_name: "kafka_producer"
-      image : "producer_test:latest"
+      container_name: 'kafka_producer'
+      image : 'producer_test:latest'
       environment:
-        KAFKA_HOST: "kafka"
-        KAFKA_PORT: "9092"
-        RAW_DATA_TOPIC: "raw_data"
+        KAFKA_HOST: 'kafka'
+        KAFKA_PORT: '9092'
+        RAW_DATA_TOPIC: 'raw_data'
       volumes:
         - ./producer/producer.py:/usr/app/src/producer.py
       command: python -u /usr/app/src/producer.py
@@ -54,13 +54,13 @@ services:
         - kafka
 
   consumer:
-      container_name: "kafka_consumer"
-      image: "consumer_test:latest"
+      container_name: 'kafka_consumer'
+      image: 'consumer_test:latest'
       environment:
-        KAFKA_HOST: "kafka"
-        KAFKA_PORT: "9092"
-        RAW_DATA_TOPIC: "aggregated_data"
-        AGGREGATED_DATA_TOPIC: "aggregated_data"
+        KAFKA_HOST: 'kafka'
+        KAFKA_PORT: '9092'
+        RAW_DATA_TOPIC: 'aggregated_data'
+        AGGREGATED_DATA_TOPIC: 'aggregated_data'
       volumes:
         - ./consumer/consumer.py:/usr/app/src/consumer.py
       command: python -u /usr/app/src/consumer.py
@@ -70,67 +70,39 @@ services:
       depends_on:
         - kafka
 
-  # mongodb:
-  #     container_name : mongodb
-  #     image : "mongodb"
-  #     ports:
-  #       - "27017:27017"
-  #     links:
-  #       - kafka
-  
-  spark-datastore:
-      container_name: "spark-datastore"
-      image: "datastore:latest"
-      volumes: 
+  spark-drive:
+      container_name: 'spark-drive'
+      image: 'spark-drive:latest'
+      volumes:
         - /data
-  master:
-      container_name: "master"
-      image: "spark-master:latest"
+
+  spark-master:
+      container_name: 'spark-master'
+      image: 'spark-master:latest'
       volumes_from:
         - spark-datastore
       ports:
-        - "8080:8080"
-        - "7077:7077"
+        - '8080:8080'
+        - '7077:7077'
       links:
         - kafka
-  slave:
-      container_name: "slave"
-      image: "spark-slave:latest"
+      depends_on:
+        - spark-drive
+      command: spark-submit --master spark://localhost:7077 /data/spark_context_example.py
+
+  spark-slave:
+      container_name: 'slave'
+      image: 'spark-slave:latest'
       # ports:
-      #   - "8081:8081"
-        # - "8082:8082"
+      #   - '8081:8081'
+      #   - '8082:8082'
       volumes_from:
         - spark-datastore
+      depends_on:
+        - spark-master
       links:
-        - master:master
+        - spark-master
       cpu_shares: 2000
       mem_limit: 1g
       depends_on:
         - master
-
-  # spark-master:
-  #   image: bde2020/spark-master:2.1.1-hadoop2.7
-  #   container_name: spark-master
-  #   ports:
-  #     - "8080:8080"
-  #     - "7077:7077"
-  #   environment:
-  #     - INIT_DAEMON_STEP=setup_spark
-  #     - "constraint:node==<yourmasternode>"
-  #   links:
-  #     - kafka
-
-  # spark-worker-1:
-  #   image: bde2020/spark-worker:2.1.1-hadoop2.7
-  #   container_name: spark-worker-1
-  #   depends_on:
-  #     - spark-master
-  #   ports:
-  #     - "8082:8082"
-  #   environment:
-  #     - "SPARK_MASTER=spark://spark-master:7077"
-  #     - "constraint:node==<yourmasternode>"
-
-
-
-    

@@ -1,4 +1,4 @@
-#!/bin/bash 
+#!/bin/bash
 
 cd producer
 docker build -t producer_test:latest .
@@ -7,7 +7,7 @@ cd ../consumer
 docker build -t consumer_test:latest .
 
 cd ../spark-datastore
-docker build -t datastore:latest .
+docker build -t spark-drive:latest .
 
 cd ../spark-master
 docker build -t spark-master:latest .
@@ -17,4 +17,3 @@ docker build -t spark-slave:latest .
 
 cd ../spark-submit
 docker build -t spark-submit:latest .
-
