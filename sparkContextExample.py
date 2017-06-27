@@ -11,27 +11,26 @@ import redis
 from kafka import KafkaProducer
 
 
-producer = KafkaProducer(bootstrap_servers='kafka:9092',value_serializer=lambda v: json.dumps(v).encode('utf-8'))
+kafkaProducer = KafkaProducer(bootstrap_servers='kafka:9092',value_serializer=lambda v: json.dumps(v).encode('utf-8'))
 
 redisClient = redis.StrictRedis(host='redis' , port=6379)
 
-def handler(message):
+def newKafkaProducer(message):
     records = message.collect()
-    # messeges = json.dumps(records)
     for record in records:
     	id = record['id']
-        producer.send('aggregated_data', id)
+        kafkaProducer.send('aggregated_data', id)
 
     print("New message generated !")
 
 
-def toRedis(message):
+def toRedisBase(message):
 	redisQueue = message.collect()
 	for record in redisQueue:
 		id = str(record['id'])
 		redisClient.set('id:{}'.format(id), str(record))
 
-def checkIfRedisRecordExists(id):
+def checkExistingOfRedisRecord(id):
 	if redisClient.get('id:{}'.format(id)) in redisClient:
 		print (redisClient.get('id:{}'.format(id)))
 	else:
@@ -55,10 +54,10 @@ def main():
 	#json.loads takes a string as input and decode it into python dict
 	parsed = kvs.map(lambda v: json.loads(v[1]))
 		
-	parsed.foreachRDD(handler)
-	parsed.foreachRDD(toRedis)
+	parsed.foreachRDD(newKafkaProducer)
+	parsed.foreachRDD(toRedisBase)
 	id = parsed.map(lambda x: int(x['id'])) \
-		.foreachRDD(checkIfRedisRecordExists)
+		.foreachRDD(checkExistingOfRedisRecord)
 	# parsed.pprint()
 	
 	#counting orders with revenue_counter = True	

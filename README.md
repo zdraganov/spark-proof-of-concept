@@ -27,6 +27,7 @@ II Spark procesing over kafka producer's data(saving incoming data from producer
 
 			3.After second step with spark master then create spark slave container with createSparkSlaveContainer.sh script
 			(can create as many workers as we want , link option allows the container automatically connect to the other (master in this case) by being added to the same network.)
+				- spark workers can be scaled with the following command docker-compose scale slave = $1 ( whatever number do we need)
 
 			4.Running a spark code using spark-submit
 			Another container is created to work as the driver and call the spark cluster. The container only runs while the spark job is running, as soon as it finishes the container is deleted.

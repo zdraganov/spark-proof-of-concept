@@ -28,7 +28,7 @@ services:
         - zookeeper
 
   redis:
-      container_name: "redis"
+      container_name: "redisbase"
       image: 'redis:3.0-alpine'
       environment:
         REDIS_ADVERTISED_HOST_NAME: "redis"
