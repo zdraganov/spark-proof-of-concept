@@ -13,7 +13,7 @@ raw_data_topic = os.environ['RAW_DATA_TOPIC']
 
 
 def main():
-    time.sleep(20)
+    time.sleep(10)
     print("Producer started")
 
     producer = KafkaProducer(bootstrap_servers=f"{kafka_host}:{kafka_port}",
